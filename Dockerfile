@@ -1,7 +1,7 @@
 FROM docker.io/leo6/baseimage
 ##MAINTAINER liuliangliang 2017-12-26
 
-ADD file/mysql.tgz /opt/
+ADD file/* /opt/
 
 
 RUN cd /opt/ \
