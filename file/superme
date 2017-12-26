@@ -1,0 +1,55 @@
+#!/usr/bin/python
+# coding:utf-8
+
+import os
+import subprocess
+import time
+from multiprocessing import Process,pool
+from threading import Thread
+from ConfigParser import ConfigParser
+import logging
+
+def data_handler(check,command):
+    while True:
+
+        pname = check.split(' ')[-1]
+        p = subprocess.Popen(check,shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out = p.stdout.readlines()
+
+        p.wait()
+        res = len(out)
+        if res > 2:
+                mylog.info('ok,service %s is running'%pname)
+        else:
+                mylog.warning('your service %s is not running,starting....'%pname)
+                start = subprocess.Popen(command,shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                mylog.info(start.stdout.readlines())
+                start.wait()
+        time.sleep(2)
+
+
+if __name__ == '__main__':
+
+    mylog = logging.getLogger(__name__)
+
+    tt1 = logging.FileHandler('/tmp/superme.log')
+
+
+    formmater1=logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -%(module)s:  %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S %p',)
+
+
+    tt1.setFormatter(formmater1)
+
+    mylog.addHandler(tt1)
+    mylog.setLevel(10)
+    CONFIGFILE="/etc/superme.conf"
+    config=ConfigParser()
+    config.read(CONFIGFILE)
+    check_list = [config.get(i,'check') for i in config.sections()]
+    command_list = [config.get(i,'command') for i in config.sections()]
+    for check,command in zip (check_list,command_list):
+
+        t = Thread(target=data_handler,args=(check,command,))
+
+        t.start()
