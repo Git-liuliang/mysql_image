@@ -1,0 +1,35 @@
+#!/bin/sh
+
+user=mysql
+group=mysql
+#create group if not exists
+egrep "^$group" /etc/group >& /dev/null
+if [ $? -ne 0 ]
+then
+    groupadd $group
+fi
+
+#create user if not exists
+egrep "^$user" /etc/passwd >& /dev/null
+if [ $? -ne 0 ]
+then
+    useradd -g $group $user -M -s /sbin/nologin
+fi
+
+
+
+
+echo 'initial mysql ....'
+
+tar -xzf /opt/mysql-5.5.54-linux2.6-x86_64.tar.gz
+rm -rf /opt/mysql-5.5.54-linux2.6-x86_64.tar.gz
+mv mysql-5.5.54-linux2.6-x86_64 /usr/local/mysql
+cd /usr/local/mysql
+/bin/cp support-files/my-large.cnf /etc/my.cnf
+chown -R mysql:mysql /usr/local/mysql/
+/usr/local/mysql/scripts/mysql_install_db  --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data  --user=mysql
+#sed  -i '283s/null &/null/' /usr/local/mysql/support-files/mysql.server
+cp support-files/mysql.server /etc/init.d/mysqld
+chmod +x /etc/init.d/mysqld
+echo 'export PATH=/usr/local/mysql/bin:$PATH' >>/etc/profile
+source /etc/profile
